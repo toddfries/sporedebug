@@ -1,0 +1,135 @@
+#!/usr/bin/perl
+
+# Copyright (c) 2014 Todd T. Fries <todd@fries.net>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use strict;
+use warnings;
+
+use Net::HTTP::Spore;
+
+my $apifile = "coinbase.json";
+
+
+my $api = Net::HTTP::Spore->new_from_spec($apifile);
+$api->enable('Net::HTTP::Spore::Middleware::Format::JSON');
+if (0) {
+$api->enable('Net::HTTP::Spore::Middleware::Auth::debug');
+}
+
+sub api
+{
+	my ($func, $extra) = @_;
+
+	my $resp;
+	eval {
+		if (!defined($extra)) {
+			$resp = $api->$func;
+		} elsif (ref($extra) eq "HASH") {
+			$resp = $api->$func(%{$extra});
+		}
+	};
+	if ($@) {
+		if (!defined($extra)) {
+			$extra = "";
+		}
+		printf STDERR "api: %s(%s) %s\n", $func, $extra, $@;
+		return undef;
+	}
+	if (!defined($resp)) {
+		return $resp;
+	}
+	if (! (ref($resp) eq "Net::HTTP::Spore::Response")) {
+		return undef;
+	}
+	return $resp->body;
+}
+
+my $res = $api->buyrate;
+if (0) {
+	my $extra;
+	my $func;
+	if ($@) {
+		printf STDERR "api->buyrate: %s\n", $@;
+		exit(1);
+	}
+}
+
+if (!defined($res)) {
+	exit(0);
+}
+mydump($res);
+
+exit(0);
+
+
+sub
+mydump
+{
+	my ($info, $indent, $oindent) = @_;
+
+	my $ai = "    ";
+
+	if (!defined($indent)) {
+		$indent = "";
+	}
+	if (!defined($oindent)) {
+		$oindent = "";
+	}
+	if (!defined($info)) {
+		$info = "<undef>";
+	}
+
+	my $type = ref($info);
+
+	unless ($type) {
+		printf " %s\n", $info;
+		return;
+	}
+
+	if ($type eq "ARRAY") {
+		printf "ARRAY (\n";
+		foreach my $a (@{$info}) {
+			print $indent;
+			mydump($a, $indent.$ai, $indent);
+		}
+		printf "%s),\n", substr($indent,0,length($indent)-5);;
+		return;
+	}
+	if ($type eq "HASH") {
+		print "HASH {";
+		my @keylist = keys %{$info};
+		if (! @keylist || $#keylist < 0) {
+			print " <empty> }\n";
+			return;
+		}
+		print "\n";
+		foreach my $k (keys %{$info}) {
+			printf "%s '%s' => ", $indent.$ai, $k;
+			mydump($info->{$k}, $indent.$ai.$ai, $indent);
+		}
+		printf "%s},\n", substr($indent,0,length($indent)-5);;
+		return;
+	}
+	if ($type eq "Net::HTTP::Spore::Response") {
+		print "Net::HTTP::Spore::Response {\n";
+		# check $info->status
+		mydump($info->body, $indent.$ai.$ai, $indent);
+		printf "%s},\n", substr($indent,0,length($indent)-5);;
+		return;
+	}
+	printf "%s %s (unhandled)\n", $indent, $type;
+	return;
+}
+

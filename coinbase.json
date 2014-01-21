@@ -1,0 +1,38 @@
+{
+  "base_url" : "https://coinbase.com/api/v1",
+  "methods" : {
+	"currencies" : {
+	    "path" : "/currencies",
+	    "method" : "GET"
+	},
+	"currencyexchange" : {
+	    "path" : "/currencies/exchange_rates",
+	    "method" : "GET"
+	},
+	"buyrate" : {
+	    "path" : "/prices/buy",
+	    "method" : "GET"
+	},
+	"sellrate" : {
+	    "path" : "/prices/sell",
+	    "method" : "GET"
+	},
+	"spotrate" : {
+	    "path" : "/prices/spot_rate",
+	    "method" : "GET"
+	},
+	"historical" : {
+	    "path" : "/prices/historical",
+	    "method" : "GET"
+	}
+  },
+   "declare" : {
+      "api_format_mode" : "content-type",
+      "api_format" : "json"
+   },
+  "name" : "CoinBase",
+  "authority" : "GITHUB:toddfries",
+  "meta" : {
+    "documentation" : "https://coinbase.com/api/doc"
+  }
+}
