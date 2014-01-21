@@ -24,36 +24,11 @@ my $apifile = "coinbase.json";
 
 my $api = Net::HTTP::Spore->new_from_spec($apifile);
 $api->enable('Net::HTTP::Spore::Middleware::Format::JSON');
-if (0) {
-$api->enable('Net::HTTP::Spore::Middleware::Auth::debug');
-}
-
-sub api
-{
-	my ($func, $extra) = @_;
-
-	my $resp;
-	eval {
-		if (!defined($extra)) {
-			$resp = $api->$func;
-		} elsif (ref($extra) eq "HASH") {
-			$resp = $api->$func(%{$extra});
-		}
-	};
-	if ($@) {
-		if (!defined($extra)) {
-			$extra = "";
-		}
-		printf STDERR "api: %s(%s) %s\n", $func, $extra, $@;
-		return undef;
-	}
-	if (!defined($resp)) {
-		return $resp;
-	}
-	if (! (ref($resp) eq "Net::HTTP::Spore::Response")) {
-		return undef;
-	}
-	return $resp->body;
+if (1) {
+$api->enable('Net::HTTP::Spore::Middleware::Auth::ApiKey',
+	keyname => 'api_key',
+	api_key => 'foo',
+	api_secret => 'fum');
 }
 
 my $res = $api->buyrate;
